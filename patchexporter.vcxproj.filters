@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="插件开发包">
+      <UniqueIdentifier>{1e43fb2b-2cec-48a1-8be8-f6f3aeb6fb33}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\pluginmain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pluginsdk\_dbgfunctions.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_plugin_types.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_plugins.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_argument.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_assembler.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_bookmark.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_comment.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_debug.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_flag.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_function.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_gui.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_label.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_memory.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_misc.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_module.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_pattern.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_register.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_stack.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\_scriptapi_symbol.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\bridgegraph.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\bridgelist.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+    <ClInclude Include="pluginsdk\bridgemain.h">
+      <Filter>插件开发包</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Strings.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,28 @@
+# Ignored directories
+bin/*/
+
+# Global filetypes to ignore
+*.depend
+*.layout
+*.patch
+*.cscope_file_list
+*.bmarks
+*.cbTemp
+*.ini
+*.opensdf
+*.sdf
+*.suo
+*.autosave
+*.~vsd
+*.dll
+*.exe
+*.orig
+*.pdb
+*.aps
+*.pro.user
+.DS_Store
+*.ipgset
+pin.log*
+
+# Debugger files to ignore
+CppCheckResults.xml
