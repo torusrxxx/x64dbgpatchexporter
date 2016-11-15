@@ -10,6 +10,10 @@ You can also make your own template to support a programming language other than
 
 您也可以仿照C.txt的格式自行制作一个模板以支持别的编程语言。
 
+All the files exported are saved in UTF-16 encoding with BOM.
+
+导出的文件都是采用带有文件头的UTF-16编码的。
+
 # Usage
 Click on "Export", then select the template(such as the "C.txt" released), then export the patch to a file.
 
