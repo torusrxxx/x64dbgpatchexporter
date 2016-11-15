@@ -153,9 +153,11 @@ bool SaveFile(const wchar_t* filename, const std::wstring & text)
 
 int APIENTRY DllMain(HMODULE hModule1, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
-    hModule = hModule1;
-    std::locale::global(std::locale(""));
-    DisableThreadLibraryCalls(hModule1);
+    if(ul_reason_for_call == DLL_PROCESS_ATTACH)
+    {
+        hModule = hModule1;
+        DisableThreadLibraryCalls(hModule1);
+    }
     return 1;
 }
 
@@ -251,7 +253,7 @@ std::wstring printTime()
 {
     std::time_t t = std::time(nullptr);
     std::wstringstream result;
-    result << std::put_time(std::localtime(&t), L"%c") << '\n';
+    result << std::put_time(std::localtime(&t), L"%Y-%m-%d %H:%M:%S");
     return result.str();
 }
 
@@ -430,12 +432,16 @@ void menu(CBTYPE cbType, void* arg1)
         browse.lpstrFileTitle = nullptr;
         browse.nMaxFile = 512;
         browse.Flags = OFN_FILEMUSTEXIST;
+        std::wstring browseDialogTitle(LoadWideString(IDS_BROWSETEMPLATE));
+        browse.lpstrTitle = browseDialogTitle.c_str();
         if(GetOpenFileName(&browse) == 0)
             return;
         std::wstring templateContent = LoadFile(templatename);
         std::wstring filterString = getTemplateFilter(templateContent);
         browse.lpstrFile = exportedname;
         browse.lpstrFilter = filterString.c_str();
+        std::wstring saveDialogTitle(LoadWideString(IDS_PLUGMENUENTRY));
+        browse.lpstrTitle = saveDialogTitle.c_str();
         browse.Flags = OFN_OVERWRITEPROMPT;
         if(GetSaveFileName(&browse) == 0)
             return;
@@ -480,6 +486,8 @@ void menu(CBTYPE cbType, void* arg1)
         browse.nMaxFile = 512;
         browse.lpstrFile = exportedname;
         browse.Flags = OFN_OVERWRITEPROMPT;
+        std::wstring saveDialogTitle(LoadWideString(IDS_PLUGMENUENTRY));
+        browse.lpstrTitle = saveDialogTitle.c_str();
         if(GetSaveFileName(&browse) == 0)
             return;
         // export patches
