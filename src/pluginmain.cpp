@@ -163,7 +163,7 @@ int APIENTRY DllMain(HMODULE hModule1, DWORD ul_reason_for_call, LPVOID lpReserv
 
 extern "C" __declspec(dllexport) bool pluginit(PLUG_INITSTRUCT* initStruct)
 {
-    initStruct->pluginVersion = 1;
+    initStruct->pluginVersion = 2;
     initStruct->sdkVersion = PLUG_SDKVERSION;
     strcpy_s(initStruct->pluginName, LoadUTF8String(IDS_PLUGNAME).c_str());
     pluginHandle = initStruct->pluginHandle;
