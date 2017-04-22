@@ -2,9 +2,9 @@
 Patch exporter for [x64dbg](https://github.com/x64dbg/x64dbg) : export patches with a template.
 
 # Feature
-Export the patches as C program source, and you can compile it with your favourite compiler. The program will automatically apply the patches you made as you double-click on it.
+Export the patches as C program source, and you can compile it with your favourite compiler. The program will automatically apply the patches you made as you double-click on it. This plugin can also export selected code into compilable disassembly.
 
-将补丁导出为C语言源程序，您之后就能编译它。导出的程序可以将您的补丁自动应用到当前运行的程序。
+将补丁导出为C语言源程序，您之后就能编译它。导出的程序可以将您的补丁自动应用到当前运行的程序。还可以把选择的代码复制成可以编译的汇编代码。
 
 You can also make your own template to support a programming language other than C.
 
@@ -22,3 +22,7 @@ Click on "Export", then select the template(such as the "C.txt" released), then 
 After you exported one file, the last template is remembered and you can use it in subsequent exports.
 
 导出一次补丁后，上次使用的模板就会记忆下来，下次导出可以用"以上次使用的模板导出补丁"快速导出。
+
+The context menu in disassembly view will add a menu item to copy compilable disassembly.
+
+反汇编窗口的右键菜单里面增加复制成可编译的反汇编功能。
