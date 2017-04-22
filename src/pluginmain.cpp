@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Windows.h>
 #include "_plugins.h"
+#include "capstone_wrapper.h"
 #include "Commdlg.h"
 #include "utf8.h"
 #include "resource.h"
@@ -33,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <sstream>
 #include <iomanip>
+#include <map>
 #include <Psapi.h>
 
 int pluginHandle = 0;
@@ -84,6 +86,13 @@ std::string Utf16ToUtf8(const std::wstring & a)
     std::string utf8;
     utf8::utf16to8(a.begin(), a.end(), std::back_inserter(utf8));
     return utf8;
+}
+
+std::wstring Utf8ToUtf16(const std::string & a)
+{
+    std::wstring utf16;
+    utf8::utf8to16(a.begin(), a.end(), std::back_inserter(utf16));
+    return utf16;
 }
 
 void ReplaceWString(std::wstring & str, const std::wstring & find, const std::wstring & replace)
@@ -163,7 +172,7 @@ int APIENTRY DllMain(HMODULE hModule1, DWORD ul_reason_for_call, LPVOID lpReserv
 
 extern "C" __declspec(dllexport) bool pluginit(PLUG_INITSTRUCT* initStruct)
 {
-    initStruct->pluginVersion = 2;
+    initStruct->pluginVersion = 3;
     initStruct->sdkVersion = PLUG_SDKVERSION;
     strcpy_s(initStruct->pluginName, LoadUTF8String(IDS_PLUGNAME).c_str());
     pluginHandle = initStruct->pluginHandle;
@@ -177,6 +186,7 @@ extern "C" __declspec(dllexport) void plugsetup(PLUG_SETUPSTRUCT* setupStruct)
     _plugin_menuaddentry(hMenu, 1, LoadUTF8String(IDS_PLUGMENUENTRY).c_str());
     _plugin_menuaddentry(hMenu, 2, LoadUTF8String(IDS_PLUGMENUENTRY2).c_str());
     _plugin_menuaddentry(hMenu, 3, LoadUTF8String(IDS_PLUGMENUENTRYABOUT).c_str());
+    _plugin_menuaddentry(setupStruct->hMenuDisasm, 4, LoadUTF8String(IDS_COPYASM).c_str());
     _plugin_registercallback(pluginHandle, CB_MENUENTRY, menu);
     _plugin_registercommand(pluginHandle, "ExportPatch", command, true);
     _plugin_registercommand(pluginHandle, "ExportPatchWithLastTemplate", command, true);
@@ -399,6 +409,198 @@ void ExportPatch(const std::wstring & templateContent, DBGPATCHINFO* patchList, 
         _plugin_logputs(LoadUTF8String(IDS_SAVEFAIL).c_str());
 }
 
+void copyAsm()
+{
+    SELECTIONDATA section;
+    duint addr;
+    unsigned char* buffer;
+    std::wstring value;
+    std::map<duint, std::wstring> labels;
+    duint newdisp;
+    wchar_t data[60];
+    char label[max(MAX_LABEL_SIZE, MAX_COMMENT_SIZE)];
+    HANDLE hClipboard;
+
+    if(!GuiSelectionGet(GUI_DISASSEMBLY, &section))
+        return;
+    addr = section.start;
+    buffer = new unsigned char[section.end - section.start + 16];
+    if(!DbgMemRead(section.start, buffer, section.end - section.start + 16))
+        return;
+    if(!OpenClipboard(GuiGetWindowHandle()))
+        return;
+    if(!EmptyClipboard())
+        return;
+    Capstone::GlobalInitialize();
+    addr = section.start;
+    while(addr <= section.end)
+    {
+        Capstone c;
+        c.Disassemble(addr, buffer + addr - section.start);
+        if(DbgGetLabelAt(addr, SEG_DEFAULT, label))
+        {
+            if(label[0] != '&')
+                labels[addr] = Utf8ToUtf16(label);
+            else
+                labels[addr] = Utf8ToUtf16(label + 1);
+        }
+        addr += c.Size();
+        if(!c.Success())
+            continue;
+        for(int i = 0; i < c.OpCount(); i++)
+        {
+            switch(c[i].type)
+            {
+            case X86_OP_IMM:
+                if(c[i].imm >= section.start && c[i].imm <= section.end)
+                {
+                    if(labels.find(c[i].imm) == labels.end())
+                    {
+                        swprintf_s(data, L"addr_%p", c[i].imm);
+                        labels.insert(std::make_pair(c[i].imm, std::wstring(data)));
+                    }
+                }
+                else if(DbgGetLabelAt(c[i].imm, SEG_DEFAULT, label))
+                {
+                    if(label[0] != '&')
+                        labels.insert(std::make_pair(c[i].imm, Utf8ToUtf16(label)));
+                    else
+                        labels.insert(std::make_pair(c[i].imm, Utf8ToUtf16(label + 1)));
+                }
+                break;
+            case X86_OP_MEM:
+                newdisp = c[i].mem.disp;
+                if(c[i].mem.base == X86_REG_RIP)
+                    newdisp += addr;
+                if(newdisp >= section.start && newdisp <= section.end)
+                {
+                    if(labels.find(newdisp) == labels.end())
+                    {
+                        swprintf_s(data, L"addr_%p", newdisp);
+                        labels.insert(std::make_pair(newdisp, std::wstring(data)));
+                    }
+                }
+                else if(DbgGetLabelAt(newdisp, SEG_DEFAULT, label))
+                {
+                    if(label[0] != '&')
+                        labels.insert(std::make_pair(newdisp, Utf8ToUtf16(label)));
+                    else
+                        labels.insert(std::make_pair(newdisp, Utf8ToUtf16(label + 1)));
+                }
+                break;
+            }
+        }
+    }
+    addr = section.start;
+    swprintf_s(data, L"; %p", addr);
+    value += data;
+    value += L"\r\n";
+    while(addr <= section.end)
+    {
+        Capstone c;
+        c.Disassemble(addr, buffer + addr - section.start);
+        const auto & l = labels.find(addr);
+        if(l != labels.cend())
+        {
+            value += l->second;
+            value += L":\r\n";
+        }
+        if(!c.Success())
+        {
+            value += L"; ???";
+            if(DbgGetCommentAt(addr, label))
+            {
+                value += L' ';
+                value += Utf8ToUtf16(label);
+            }
+            value += L"\r\n";
+            addr += c.Size();
+            continue;
+        }
+        value += Utf8ToUtf16(c.Mnemonic());
+        if(c.OpCount() > 0)
+        {
+            value += L' ';
+            for(int i = 0; i < c.OpCount(); i++)
+            {
+                std::wstring value2;
+                if(i != 0)
+                    value += L',';
+                value += L' ';
+                const auto & mem = c[i].mem;
+                switch(c[i].type)
+                {
+                case X86_OP_IMM:
+                    if(labels.find(c[i].imm) != labels.cend())
+                        value += labels.at(c[i].imm);
+                    else
+                        value += Utf8ToUtf16(c.OperandText(i));
+                    break;
+                case X86_OP_MEM:
+                    newdisp = mem.disp;
+                    if(c[0].mem.base == X86_REG_RIP)
+                        newdisp += addr + c.Size();
+                    if(labels.find(newdisp) != labels.cend())
+                    {
+                        if(mem.base == X86_REG_RIP) //rip-relative
+                            value2 = labels.at(newdisp);
+                        else //normal
+                        {
+                            bool prependPlus = false;
+                            if(mem.base)
+                            {
+                                value2 += Utf8ToUtf16(c.RegName(mem.base));
+                                prependPlus = true;
+                            }
+                            if(mem.index)
+                            {
+                                if(prependPlus)
+                                    value2 += L"+";
+                                value2 += Utf8ToUtf16(c.RegName(mem.index));
+                                swprintf_s(data, L"*%X", mem.scale);
+                                value2 += data;
+                                prependPlus = true;
+                            }
+                            if(mem.disp)
+                            {
+                                if(prependPlus)
+                                    value2 += L'+';
+                                value2 += labels.at(mem.disp);
+                            }
+                        }
+                    }
+                    else
+                        value2 = Utf8ToUtf16(c.OperandText(i));
+                    if(mem.segment != X86_REG_INVALID)
+                        value += Utf8ToUtf16(c.MemSizeName(c[i].size)) + L" ptr " + Utf8ToUtf16(c.RegName(mem.segment)) + L":[" + value2 + L"]";
+                    else
+                        value += Utf8ToUtf16(c.MemSizeName(c[i].size)) + L" ptr [" + value2 + L"]";
+                    break;
+                default:
+                    value += Utf8ToUtf16(c.OperandText(i));
+                }
+            }
+        }
+        if(DbgGetCommentAt(addr, label))
+        {
+            value += L"  ;";
+            value += Utf8ToUtf16(label);
+        }
+        addr += c.Size();
+        if(addr <= section.end)
+            value += L"\r\n";
+    }
+    Capstone::GlobalFinalize();
+    delete buffer;
+    hClipboard = GlobalAlloc(GMEM_MOVEABLE, value.size() * sizeof(wchar_t) + sizeof(wchar_t));
+    void* clipboardData = GlobalLock(hClipboard);
+    memcpy(clipboardData, value.c_str(), value.size() * sizeof(wchar_t) + sizeof(wchar_t));
+    GlobalUnlock(hClipboard);
+    clipboardData = NULL;
+    SetClipboardData(CF_UNICODETEXT, hClipboard);
+    CloseClipboard();
+}
+
 void menu(CBTYPE cbType, void* arg1)
 {
     PLUG_CB_MENUENTRY* info = (PLUG_CB_MENUENTRY*)arg1;
@@ -501,6 +703,10 @@ void menu(CBTYPE cbType, void* arg1)
         utf8::utf8to16(compiledateASCII.begin(), compiledateASCII.end(), std::back_inserter(compiledate));
         ReplaceWString(text, L"$compiledate", compiledate);
         MessageBox(hwndDlg, text.c_str(), LoadWideString(IDS_PLUGNAME).c_str(), MB_OK);
+    }
+    else if(info->hEntry == 4)
+    {
+        copyAsm();
     }
     else
     {
