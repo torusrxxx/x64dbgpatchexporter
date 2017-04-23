@@ -426,11 +426,20 @@ void copyAsm()
     addr = section.start;
     buffer = new unsigned char[section.end - section.start + 16];
     if(!DbgMemRead(section.start, buffer, section.end - section.start + 16))
+    {
+        delete buffer;
         return;
+    }
     if(!OpenClipboard(GuiGetWindowHandle()))
+    {
+        delete buffer;
         return;
+    }
     if(!EmptyClipboard())
+    {
+        delete buffer;
         return;
+    }
     Capstone::GlobalInitialize();
     addr = section.start;
     while(addr <= section.end)
@@ -557,8 +566,11 @@ void copyAsm()
                                 if(prependPlus)
                                     value2 += L"+";
                                 value2 += Utf8ToUtf16(c.RegName(mem.index));
-                                swprintf_s(data, L"*%X", mem.scale);
-                                value2 += data;
+                                if(mem.scale != 1)
+                                {
+                                    swprintf_s(data, L"*%X", mem.scale);
+                                    value2 += data;
+                                }
                                 prependPlus = true;
                             }
                             if(mem.disp)
@@ -584,7 +596,10 @@ void copyAsm()
         if(DbgGetCommentAt(addr, label))
         {
             value += L"  ;";
-            value += Utf8ToUtf16(label);
+            if(label[0] != 1)
+                value += Utf8ToUtf16(label);
+            else
+                value += Utf8ToUtf16(label + 1);
         }
         addr += c.Size();
         if(addr <= section.end)
@@ -594,11 +609,13 @@ void copyAsm()
     delete buffer;
     hClipboard = GlobalAlloc(GMEM_MOVEABLE, value.size() * sizeof(wchar_t) + sizeof(wchar_t));
     void* clipboardData = GlobalLock(hClipboard);
-    memcpy(clipboardData, value.c_str(), value.size() * sizeof(wchar_t) + sizeof(wchar_t));
+    memcpy(clipboardData, value.c_str(), value.size() * sizeof(wchar_t));
+    ((wchar_t*)clipboardData)[value.size()] = 0;
     GlobalUnlock(hClipboard);
     clipboardData = NULL;
     SetClipboardData(CF_UNICODETEXT, hClipboard);
     CloseClipboard();
+    GuiAddStatusBarMessage(LoadUTF8String(IDS_DATACOPIED).c_str());
 }
 
 void menu(CBTYPE cbType, void* arg1)
