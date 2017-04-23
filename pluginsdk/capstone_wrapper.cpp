@@ -145,8 +145,11 @@ std::string Capstone::OperandText(int opindex) const
                 if(prependPlus)
                     result += "+";
                 result += RegName(x86_reg(mem.index));
-                sprintf_s(temp, "*%X", mem.scale);
-                result += temp;
+                if(mem.scale != 1)
+                {
+                    sprintf_s(temp, "*%X", mem.scale);
+                    result += temp;
+                }
                 prependPlus = true;
             }
             if(mem.disp)
