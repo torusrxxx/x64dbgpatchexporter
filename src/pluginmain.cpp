@@ -608,12 +608,18 @@ void copyAsm()
     Capstone::GlobalFinalize();
     delete buffer;
     hClipboard = GlobalAlloc(GMEM_MOVEABLE, value.size() * sizeof(wchar_t) + sizeof(wchar_t));
-    void* clipboardData = GlobalLock(hClipboard);
-    memcpy(clipboardData, value.c_str(), value.size() * sizeof(wchar_t));
-    ((wchar_t*)clipboardData)[value.size()] = 0;
-    GlobalUnlock(hClipboard);
-    clipboardData = NULL;
-    SetClipboardData(CF_UNICODETEXT, hClipboard);
+    if(hClipboard != NULL)
+    {
+        void* clipboardData = GlobalLock(hClipboard);
+        if(clipboardData != NULL)
+        {
+            memcpy(clipboardData, value.c_str(), value.size() * sizeof(wchar_t));
+            ((wchar_t*)clipboardData)[value.size()] = 0;
+            GlobalUnlock(hClipboard);
+            clipboardData = NULL;
+            SetClipboardData(CF_UNICODETEXT, hClipboard);
+        }
+    }
     CloseClipboard();
     GuiAddStatusBarMessage(LoadUTF8String(IDS_DATACOPIED).c_str());
 }
