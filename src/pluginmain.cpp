@@ -540,6 +540,9 @@ void copyAsm()
                 switch(c[i].type)
                 {
                 case X86_OP_IMM:
+                    if(labels.find(c[i].imm) != labels.cend())
+                        value += labels.at(c[i].imm);
+                    else
                         value += Utf8ToUtf16(c.OperandText(i));
                     break;
                 case X86_OP_MEM:
