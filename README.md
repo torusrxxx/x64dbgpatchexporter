@@ -1,3 +1,5 @@
+WARNING:this plugin is NOT COMPATIBLE with latest x64dbg because Capstone has been removed. It will be fixed in a few days.
+
 # x64dbgpatchexporter
 Patch exporter for [x64dbg](https://github.com/x64dbg/x64dbg) : export patches with a template.
 
